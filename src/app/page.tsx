@@ -1,101 +1,114 @@
 "use client";
 import Image from "next/image";
-import { Box } from "./classes/Box";
+import {
+	Bishop,
+	Box,
+	ElementsI,
+	King,
+	Knight,
+	Pawn,
+	Piece,
+	Queen,
+	Rook,
+} from "./Classes";
 import { useState } from "react";
 
 export default function Home() {
-	const board = [
+	const [board, setBoard] = useState([
 		[
-			new Box(1, 1, "R", 0),
-			new Box(1, 2, "N", 0),
-			new Box(1, 3, "B", 0),
-			new Box(1, 4, "Q", 0),
-			new Box(1, 5, "K", 0),
-			new Box(1, 6, "B", 0),
-			new Box(1, 7, "N", 0),
-			new Box(1, 8, "R", 0),
+			new Rook(0, 0, 0),
+			new Knight(0, 1, 0),
+			new Bishop(0, 2, 0),
+			new Queen(0, 3, 0),
+			new King(0, 4, 0),
+			new Bishop(0, 5, 0),
+			new Knight(0, 6, 0),
+			new Rook(0, 7, 0),
 		],
 		[
-			new Box(2, 1, "P", 0),
-			new Box(2, 2, "P", 0),
-			new Box(2, 3, "P", 0),
-			new Box(2, 4, "P", 0),
-			new Box(2, 5, "P", 0),
-			new Box(2, 6, "P", 0),
-			new Box(2, 7, "P", 0),
-			new Box(2, 8, "P", 0),
+			new Pawn(1, 0, 0),
+			new Pawn(1, 1, 0),
+			new Pawn(1, 2, 0),
+			new Pawn(1, 3, 0),
+			new Pawn(1, 4, 0),
+			new Pawn(1, 5, 0),
+			new Pawn(1, 6, 0),
+			new Pawn(1, 7, 0),
 		],
 		[
-			new Box(3, 1, "E", -1),
-			new Box(3, 2, "E", -1),
-			new Box(3, 3, "E", -1),
-			new Box(3, 4, "E", -1),
-			new Box(3, 5, "E", -1),
-			new Box(3, 6, "E", -1),
-			new Box(3, 7, "E", -1),
-			new Box(3, 8, "E", -1),
+			new Box(2, 0),
+			new Box(2, 1),
+			new Box(2, 2),
+			new Box(2, 3),
+			new Box(2, 4),
+			new Box(2, 5),
+			new Box(2, 6),
+			new Box(2, 7),
 		],
 		[
-			new Box(4, 1, "E", -1),
-			new Box(4, 2, "E", -1),
-			new Box(4, 3, "E", -1),
-			new Box(4, 4, "E", -1),
-			new Box(4, 5, "E", -1),
-			new Box(4, 6, "E", -1),
-			new Box(4, 7, "E", -1),
-			new Box(4, 8, "E", -1),
+			new Box(3, 0),
+			new Box(3, 1),
+			new Box(3, 2),
+			new Box(3, 3),
+			new Box(3, 4),
+			new Box(3, 5),
+			new Box(3, 6),
+			new Box(3, 7),
 		],
 		[
-			new Box(5, 1, "E", -1),
-			new Box(5, 2, "E", -1),
-			new Box(5, 3, "E", -1),
-			new Box(5, 4, "E", -1),
-			new Box(5, 5, "E", -1),
-			new Box(5, 6, "E", -1),
-			new Box(5, 7, "E", -1),
-			new Box(5, 8, "E", -1),
+			new Box(4, 0),
+			new Box(4, 1),
+			new Box(4, 2),
+			new Box(4, 3),
+			new Box(4, 4),
+			new Box(4, 5),
+			new Box(4, 6),
+			new Box(4, 7),
 		],
 		[
-			new Box(6, 1, "E", -1),
-			new Box(6, 2, "E", -1),
-			new Box(6, 3, "E", -1),
-			new Box(6, 4, "E", -1),
-			new Box(6, 5, "E", -1),
-			new Box(6, 6, "E", -1),
-			new Box(6, 7, "E", -1),
-			new Box(6, 8, "E", -1),
+			new Box(5, 0),
+			new Box(5, 1),
+			new Box(5, 2),
+			new Box(5, 3),
+			new Box(5, 4),
+			new Box(5, 5),
+			new Box(5, 6),
+			new Box(5, 7),
 		],
 		[
-			new Box(7, 1, "P", 1),
-			new Box(7, 2, "P", 1),
-			new Box(7, 3, "P", 1),
-			new Box(7, 4, "P", 1),
-			new Box(7, 5, "P", 1),
-			new Box(7, 6, "P", 1),
-			new Box(7, 7, "P", 1),
-			new Box(7, 8, "P", 1),
+			new Pawn(6, 0, 1),
+			new Pawn(6, 1, 1),
+			new Pawn(6, 2, 1),
+			new Pawn(6, 3, 1),
+			new Pawn(6, 4, 1),
+			new Pawn(6, 5, 1),
+			new Pawn(6, 6, 1),
+			new Pawn(6, 7, 1),
 		],
 		[
-			new Box(8, 1, "R", 1),
-			new Box(8, 2, "N", 1),
-			new Box(8, 3, "B", 1),
-			new Box(8, 4, "Q", 1),
-			new Box(8, 5, "K", 1),
-			new Box(8, 6, "B", 1),
-			new Box(8, 7, "N", 1),
-			new Box(8, 8, "R", 1),
+			new Rook(7, 0, 1),
+			new Knight(7, 1, 1),
+			new Bishop(7, 2, 1),
+			new Queen(7, 3, 1),
+			new King(7, 4, 1),
+			new Bishop(7, 5, 1),
+			new Knight(7, 6, 1),
+			new Rook(7, 7, 1),
 		],
-	];
+	]);
 	const [selectedBlock, setSelectedBlock] = useState({
 		row: -1,
 		col: -1,
 	});
-
-	const Block = ({ box }: { box: Box }) => {
-		const { row, col, piece, pieceColor } = box;
+	const Block = ({ element }: { element: ElementsI }) => {
+		const { row, col } = element;
 		return (
 			<div
 				className="w-16 h-16 flex justify-center items-center"
+				onClick={(e) => {
+					e.stopPropagation();
+					setSelectedBlock({ row, col });
+				}}
 				style={{
 					backgroundColor:
 						(row + col) % 2 ? "rgb(181, 136, 99)" : "rgb(240, 217, 181)",
@@ -105,19 +118,15 @@ export default function Home() {
 							? "solid blue"
 							: "",
 				}}
-				onClick={(e) => {
-					e.stopPropagation();
-					setSelectedBlock({ row, col });
-					if (selectedBlock.col === col && selectedBlock.row === row)
-						setSelectedBlock({ row: -1, col: -1 });
-				}}
 			>
-				{piece !== "E" && (
+				{element instanceof Piece && (
 					<Image
-						src={`pieces/${pieceColor === 0 ? "black" : "white"}/${piece}.svg`}
+						src={`pieces/${element.color === 0 ? "black" : "white"}/${
+							element.constructor.name
+						}.svg`}
 						width={100}
 						height={100}
-						alt={`${pieceColor === 0 ? "blk" : "wht"} ${piece}`}
+						alt={element.constructor.name}
 					/>
 				)}
 			</div>
@@ -131,8 +140,8 @@ export default function Home() {
 		>
 			{board.map((rowArr, i) => (
 				<div key={i} className="flex justify-center">
-					{rowArr.map((box: Box, j) => (
-						<Block box={box} key={`${i}${j}`} />
+					{rowArr.map((element: ElementsI, j) => (
+						<Block element={element} key={`${i}${j}`} />
 					))}
 				</div>
 			))}
