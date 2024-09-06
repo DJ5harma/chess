@@ -97,33 +97,65 @@ export default function Home() {
 		],
 	]);
 	const [selectedBlock, setSelectedBlock] = useState({
+		alreadySelected: false,
 		row: -1,
 		col: -1,
 	});
-	const Block = ({ element }: { element: ElementsI }) => {
-		const { row, col } = element;
+	const Block = ({
+		element,
+		i,
+		j,
+	}: {
+		element: ElementsI;
+		i: number;
+		j: number;
+	}) => {
 		return (
 			<div
 				className="w-16 h-16 flex justify-center items-center"
 				onClick={(e) => {
 					e.stopPropagation();
-					setSelectedBlock({ row, col });
+					if (!selectedBlock.alreadySelected) {
+						setSelectedBlock({ alreadySelected: true, row: i, col: j });
+						return;
+					}
+					if (selectedBlock.row !== i || selectedBlock.col !== j) {
+						const [srcRow, srcCol] = [selectedBlock.row, selectedBlock.col];
+
+						if (board[srcRow][srcCol].constructor.name === "Box")
+							return setSelectedBlock({
+								alreadySelected: false,
+								row: -1,
+								col: -1,
+							});
+
+						const temp = board[srcRow][srcCol];
+						board[i][j] = temp;
+						board[i][j].row = i;
+						board[i][j].col = i;
+
+						delete board[srcRow][srcCol];
+						board[srcRow][srcCol] = new Box(srcRow, srcCol);
+
+						setBoard([...board]);
+					}
+					setSelectedBlock({ alreadySelected: false, row: -1, col: -1 });
 				}}
 				style={{
 					backgroundColor:
-						(row + col) % 2 ? "rgb(181, 136, 99)" : "rgb(240, 217, 181)",
-					color: (row + col) % 2 ? "white" : "black",
+						(i + j) % 2 ? "rgb(181, 136, 99)" : "rgb(240, 217, 181)",
+					color: (i + j) % 2 ? "white" : "black",
 					border:
-						selectedBlock.row === row && selectedBlock.col === col
+						selectedBlock.row === i && selectedBlock.col === j
 							? "solid blue"
 							: "",
 				}}
 			>
-				{element instanceof Piece && (
+				{element.constructor.name !== "Box" && (
 					<Image
-						src={`pieces/${element.color === 0 ? "black" : "white"}/${
-							element.constructor.name
-						}.svg`}
+						src={`pieces/${
+							(element as Piece).color === 0 ? "black" : "white"
+						}/${element.constructor.name}.svg`}
 						width={100}
 						height={100}
 						alt={element.constructor.name}
@@ -136,12 +168,14 @@ export default function Home() {
 	return (
 		<div
 			className="flex flex-col sm:p-20"
-			onClick={() => setSelectedBlock({ row: -1, col: -1 })}
+			onClick={() =>
+				setSelectedBlock({ alreadySelected: false, row: -1, col: -1 })
+			}
 		>
 			{board.map((rowArr, i) => (
 				<div key={i} className="flex justify-center">
 					{rowArr.map((element: ElementsI, j) => (
-						<Block element={element} key={`${i}${j}`} />
+						<Block element={element} key={`${i}${j}`} i={i} j={j} />
 					))}
 				</div>
 			))}

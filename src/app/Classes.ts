@@ -12,6 +12,8 @@ export class Piece extends Box {
 		super(row, col);
 		this.color = color;
 	}
+	getMoves() {}
+	move() {}
 }
 class MoveSensitivePiece extends Piece {
 	hasMoved: boolean;
