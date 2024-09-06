@@ -1,106 +1,25 @@
 "use client";
 import Image from "next/image";
-import {
-	Bishop,
-	Box,
-	ElementsI,
-	King,
-	Knight,
-	Pawn,
-	Piece,
-	Queen,
-	Rook,
-} from "./Classes";
+import { Box, ElementsI, Piece } from "./lib/Classes";
 import { useState } from "react";
+import startingBoard from "./lib/sampleBoard";
 
 export default function Home() {
-	const [board, setBoard] = useState([
-		[
-			new Rook(0, 0, 0),
-			new Knight(0, 1, 0),
-			new Bishop(0, 2, 0),
-			new Queen(0, 3, 0),
-			new King(0, 4, 0),
-			new Bishop(0, 5, 0),
-			new Knight(0, 6, 0),
-			new Rook(0, 7, 0),
-		],
-		[
-			new Pawn(1, 0, 0),
-			new Pawn(1, 1, 0),
-			new Pawn(1, 2, 0),
-			new Pawn(1, 3, 0),
-			new Pawn(1, 4, 0),
-			new Pawn(1, 5, 0),
-			new Pawn(1, 6, 0),
-			new Pawn(1, 7, 0),
-		],
-		[
-			new Box(2, 0),
-			new Box(2, 1),
-			new Box(2, 2),
-			new Box(2, 3),
-			new Box(2, 4),
-			new Box(2, 5),
-			new Box(2, 6),
-			new Box(2, 7),
-		],
-		[
-			new Box(3, 0),
-			new Box(3, 1),
-			new Box(3, 2),
-			new Box(3, 3),
-			new Box(3, 4),
-			new Box(3, 5),
-			new Box(3, 6),
-			new Box(3, 7),
-		],
-		[
-			new Box(4, 0),
-			new Box(4, 1),
-			new Box(4, 2),
-			new Box(4, 3),
-			new Box(4, 4),
-			new Box(4, 5),
-			new Box(4, 6),
-			new Box(4, 7),
-		],
-		[
-			new Box(5, 0),
-			new Box(5, 1),
-			new Box(5, 2),
-			new Box(5, 3),
-			new Box(5, 4),
-			new Box(5, 5),
-			new Box(5, 6),
-			new Box(5, 7),
-		],
-		[
-			new Pawn(6, 0, 1),
-			new Pawn(6, 1, 1),
-			new Pawn(6, 2, 1),
-			new Pawn(6, 3, 1),
-			new Pawn(6, 4, 1),
-			new Pawn(6, 5, 1),
-			new Pawn(6, 6, 1),
-			new Pawn(6, 7, 1),
-		],
-		[
-			new Rook(7, 0, 1),
-			new Knight(7, 1, 1),
-			new Bishop(7, 2, 1),
-			new Queen(7, 3, 1),
-			new King(7, 4, 1),
-			new Bishop(7, 5, 1),
-			new Knight(7, 6, 1),
-			new Rook(7, 7, 1),
-		],
-	]);
+	const [game, setGame] = useState({
+		move: 1,
+		board: startingBoard,
+	});
 	const [selectedBlock, setSelectedBlock] = useState({
 		alreadySelected: false,
 		row: -1,
 		col: -1,
 	});
+	function unselectBox() {
+		setSelectedBlock({ alreadySelected: false, row: -1, col: -1 });
+	}
+	function selectBox(row: number, col: number) {
+		setSelectedBlock({ alreadySelected: true, row, col });
+	}
 	const Block = ({
 		element,
 		i,
@@ -116,30 +35,46 @@ export default function Home() {
 				onClick={(e) => {
 					e.stopPropagation();
 					if (!selectedBlock.alreadySelected) {
-						setSelectedBlock({ alreadySelected: true, row: i, col: j });
+						selectBox(i, j);
 						return;
 					}
-					if (selectedBlock.row !== i || selectedBlock.col !== j) {
-						const [srcRow, srcCol] = [selectedBlock.row, selectedBlock.col];
+					const sourceBox = game.board[selectedBlock.row][
+						selectedBlock.col
+					] as Piece;
+					const destinationBox = game.board[i][j] as Piece;
+					if (
+						sourceBox.constructor.name === "Box" || // prevents moves made by boxes (as sources) without a piece
+						sourceBox.color === destinationBox.color || // prevents cannibalism
+						(game.move % 2 === 1 && sourceBox.color === 0) ||
+						(game.move % 2 === 0 && sourceBox.color === 1) // makes sure the right player moves for the specific turn
+					) {
+						selectBox(i, j);
+						return;
+					}
 
-						if (board[srcRow][srcCol].constructor.name === "Box")
-							return setSelectedBlock({
-								alreadySelected: false,
-								row: -1,
-								col: -1,
-							});
+					const { board, move } = game;
+					const [srcRow, srcCol] = [selectedBlock.row, selectedBlock.col];
 
-						const temp = board[srcRow][srcCol];
-						board[i][j] = temp;
+					if (
+						!selectedBlock.alreadySelected ||
+						(board[srcRow][srcCol] as Piece).color ===
+							(board[i][j] as Piece).color
+					) {
+						unselectBox(); // do nothing if we didn't select a box previously
+						return;
+					}
+
+					if (srcRow !== i || srcCol !== j) {
+						board[i][j] = board[srcRow][srcCol];
 						board[i][j].row = i;
 						board[i][j].col = i;
 
 						delete board[srcRow][srcCol];
 						board[srcRow][srcCol] = new Box(srcRow, srcCol);
 
-						setBoard([...board]);
+						setGame({ board: [...board], move: move + 1 });
 					}
-					setSelectedBlock({ alreadySelected: false, row: -1, col: -1 });
+					unselectBox();
 				}}
 				style={{
 					backgroundColor:
@@ -167,18 +102,21 @@ export default function Home() {
 
 	return (
 		<div
-			className="flex flex-col sm:p-20"
+			className="flex flex-col sm:p-20 items-center"
 			onClick={() =>
 				setSelectedBlock({ alreadySelected: false, row: -1, col: -1 })
 			}
 		>
-			{board.map((rowArr, i) => (
+			{game.board.map((rowArr, i) => (
 				<div key={i} className="flex justify-center">
 					{rowArr.map((element: ElementsI, j) => (
 						<Block element={element} key={`${i}${j}`} i={i} j={j} />
 					))}
 				</div>
 			))}
+			<h1 className="m-2">
+				Move {game.move} {game.move % 2 === 0 ? "_Black" : "_White"} to move
+			</h1>
 		</div>
 	);
 }

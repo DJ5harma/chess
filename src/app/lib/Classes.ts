@@ -12,7 +12,7 @@ export class Piece extends Box {
 		super(row, col);
 		this.color = color;
 	}
-	getMoves() {}
+	getMoves(board: Box[][]) {}
 	move() {}
 }
 class MoveSensitivePiece extends Piece {
@@ -33,7 +33,26 @@ export class Bishop extends Piece {
 	constructor(row: number, col: number, color: 0 | 1) {
 		super(row, col, color);
 	}
-	getMoves() {}
+	getMoves(board: Box[][]) {
+		const boxesPossible: { row: number; col: number }[] = [];
+		for (let i = this.row - 1, j = this.col - 1; i > -1 && j > -1; i--, j--) {
+			if (board[i][j].constructor.name !== "Box") break;
+			boxesPossible.push({ row: i, col: j });
+		}
+		for (let i = this.row + 1, j = this.col + 1; i < 8 && j < 8; i++, j++) {
+			if (board[i][j].constructor.name !== "Box") break;
+			boxesPossible.push({ row: i, col: j });
+		}
+		for (let i = this.row - 1, j = this.col + 1; i > -1 && j < 8; i--, j++) {
+			if (board[i][j].constructor.name !== "Box") break;
+			boxesPossible.push({ row: i, col: j });
+		}
+		for (let i = this.row + 1, j = this.col + 1; i < 8 && j > -1; i++, j--) {
+			if (board[i][j].constructor.name !== "Box") break;
+			boxesPossible.push({ row: i, col: j });
+		}
+		return boxesPossible;
+	}
 	move() {}
 }
 export class Knight extends Piece {
