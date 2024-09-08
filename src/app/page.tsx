@@ -9,79 +9,71 @@ export default function Home() {
 		move: 1,
 		board: startingBoard,
 	});
-	const [selectedBlock, setSelectedBlock] = useState({
-		alreadySelected: false,
-		row: -1,
-		col: -1,
+	const [previousSelection, setPreviousSelection] = useState({
+		srcRow: -1,
+		srcCol: -1,
+		exists: false,
 	});
 	function unselectBox() {
-		setSelectedBlock({ alreadySelected: false, row: -1, col: -1 });
+		setPreviousSelection({ srcRow: -1, srcCol: -1, exists: false });
 	}
-	function selectBox(row: number, col: number) {
-		setSelectedBlock({ alreadySelected: true, row, col });
+	function selectBox(srcRow: number, srcCol: number) {
+		setPreviousSelection({ srcRow, srcCol, exists: true });
 	}
+	const isPiece = (row: number, col: number) => {
+		if (row === -1 || col === -1) return false;
+		return game.board[row][col].constructor.name !== "Box";
+	};
+
 	const Block = ({
 		element,
-		i,
-		j,
+		currRow,
+		currCol,
 	}: {
 		element: ElementsI;
-		i: number;
-		j: number;
+		currRow: number;
+		currCol: number;
 	}) => {
 		return (
 			<div
 				className="w-16 h-16 flex justify-center items-center"
 				onClick={(e) => {
 					e.stopPropagation();
-					if (!selectedBlock.alreadySelected) {
-						selectBox(i, j);
-						return;
-					}
-					const sourceBox = game.board[selectedBlock.row][
-						selectedBlock.col
-					] as Piece;
-					const destinationBox = game.board[i][j] as Piece;
-					if (
-						sourceBox.constructor.name === "Box" || // prevents moves made by boxes (as sources) without a piece
-						sourceBox.color === destinationBox.color || // prevents cannibalism
-						(game.move % 2 === 1 && sourceBox.color === 0) ||
-						(game.move % 2 === 0 && sourceBox.color === 1) // makes sure the right player moves for the specific turn
-					) {
-						selectBox(i, j);
-						return;
-					}
+					unselectBox();
+
+					const { srcRow, srcCol } = previousSelection;
+
+					if (!previousSelection.exists) return selectBox(currRow, currCol);
 
 					const { board, move } = game;
-					const [srcRow, srcCol] = [selectedBlock.row, selectedBlock.col];
+					const SOURCE = board[srcRow][srcCol] as Piece;
+					const DESTINATION = board[currRow][currCol] as Piece;
+
+					if (currRow === srcRow && currCol === srcCol) return unselectBox();
 
 					if (
-						!selectedBlock.alreadySelected ||
-						(board[srcRow][srcCol] as Piece).color ===
-							(board[i][j] as Piece).color
-					) {
-						unselectBox(); // do nothing if we didn't select a box previously
-						return;
-					}
+						!isPiece(srcRow, srcCol) ||
+						SOURCE.color === DESTINATION.color || // prevents cannibalism
+						(move % 2 === 1 && SOURCE.color === 0) ||
+						(move % 2 === 0 && SOURCE.color === 1) // makes sure the right player moves for the specific turn
+					)
+						return selectBox(currRow, currCol);
 
-					if (srcRow !== i || srcCol !== j) {
-						board[i][j] = board[srcRow][srcCol];
-						board[i][j].row = i;
-						board[i][j].col = i;
+					board[currRow][currCol] = SOURCE;
+					delete board[srcRow][srcCol];
+					board[srcRow][srcCol] = new Box(srcRow, srcCol);
 
-						delete board[srcRow][srcCol];
-						board[srcRow][srcCol] = new Box(srcRow, srcCol);
-
-						setGame({ board: [...board], move: move + 1 });
-					}
-					unselectBox();
+					setGame({ board: [...board], move: move + 1 });
 				}}
 				style={{
 					backgroundColor:
-						(i + j) % 2 ? "rgb(181, 136, 99)" : "rgb(240, 217, 181)",
-					color: (i + j) % 2 ? "white" : "black",
+						(currRow + currCol) % 2
+							? "rgb(181, 136, 99)"
+							: "rgb(240, 217, 181)",
+					color: (currRow + currCol) % 2 ? "white" : "black",
 					border:
-						selectedBlock.row === i && selectedBlock.col === j
+						previousSelection.srcRow === currRow &&
+						previousSelection.srcCol === currCol
 							? "solid blue"
 							: "",
 				}}
@@ -102,15 +94,13 @@ export default function Home() {
 
 	return (
 		<div
-			className="flex flex-col sm:p-20 items-center"
-			onClick={() =>
-				setSelectedBlock({ alreadySelected: false, row: -1, col: -1 })
-			}
+			className="flex flex-col sm:p-20 items-center select-none"
+			onClick={unselectBox}
 		>
 			{game.board.map((rowArr, i) => (
 				<div key={i} className="flex justify-center">
 					{rowArr.map((element: ElementsI, j) => (
-						<Block element={element} key={`${i}${j}`} i={i} j={j} />
+						<Block element={element} key={`${i}${j}`} currRow={i} currCol={j} />
 					))}
 				</div>
 			))}
