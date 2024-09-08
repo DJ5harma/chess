@@ -9,21 +9,11 @@ export default function Home() {
 		move: 1,
 		board: startingBoard,
 	});
-	const [previousSelection, setPreviousSelection] = useState({
-		srcRow: -1,
-		srcCol: -1,
-		exists: false,
-	});
-	function unselectBox() {
-		setPreviousSelection({ srcRow: -1, srcCol: -1, exists: false });
-	}
-	function selectBox(srcRow: number, srcCol: number) {
-		setPreviousSelection({ srcRow, srcCol, exists: true });
-	}
-	const isPiece = (row: number, col: number) => {
-		if (row === -1 || col === -1) return false;
-		return game.board[row][col].constructor.name !== "Box";
-	};
+	const [previousSelection, setPreviousSelection] = useState<Box | null>(null);
+
+	// const [highlightedBoxes, setHighlightedBoxes] = useState<Box[]>([]);
+
+	const isPiece = (box: Box) => box.constructor.name !== "Box";
 
 	const Block = ({
 		element,
@@ -34,36 +24,42 @@ export default function Home() {
 		currRow: number;
 		currCol: number;
 	}) => {
+		const highlight = true;
+
 		return (
 			<div
 				className="w-16 h-16 flex justify-center items-center"
 				onClick={(e) => {
 					e.stopPropagation();
-					unselectBox();
-
-					const { srcRow, srcCol } = previousSelection;
-
-					if (!previousSelection.exists) return selectBox(currRow, currCol);
-
 					const { board, move } = game;
-					const SOURCE = board[srcRow][srcCol] as Piece;
-					const DESTINATION = board[currRow][currCol] as Piece;
 
-					if (currRow === srcRow && currCol === srcCol) return unselectBox();
+					const DST = board[currRow][currCol] as Piece;
+					const SRC = previousSelection as Piece;
 
 					if (
-						!isPiece(srcRow, srcCol) ||
-						SOURCE.color === DESTINATION.color || // prevents cannibalism
-						(move % 2 === 1 && SOURCE.color === 0) ||
-						(move % 2 === 0 && SOURCE.color === 1) // makes sure the right player moves for the specific turn
+						!SRC ||
+						!isPiece(SRC) ||
+						SRC.color === DST.color ||
+						(move % 2 === 1 && SRC.color === 0) ||
+						(move % 2 === 0 && SRC.color === 1)
 					)
-						return selectBox(currRow, currCol);
+						return setPreviousSelection(DST);
+					if (SRC === DST) return setPreviousSelection(null);
 
-					board[currRow][currCol] = SOURCE;
-					delete board[srcRow][srcCol];
-					board[srcRow][srcCol] = new Box(srcRow, srcCol);
+					const { row: prevRow, col: prevCol } = SRC;
+
+					SRC.row = currRow;
+					SRC.col = currCol;
+
+					board[currRow][currCol] = SRC;
+					board[prevRow][prevCol] = DST;
+
+					delete board[prevRow][prevCol];
+
+					board[prevRow][prevCol] = new Box(prevRow, prevCol);
 
 					setGame({ board: [...board], move: move + 1 });
+					setPreviousSelection(null);
 				}}
 				style={{
 					backgroundColor:
@@ -71,23 +67,44 @@ export default function Home() {
 							? "rgb(181, 136, 99)"
 							: "rgb(240, 217, 181)",
 					color: (currRow + currCol) % 2 ? "white" : "black",
-					border:
-						previousSelection.srcRow === currRow &&
-						previousSelection.srcCol === currCol
+					border: previousSelection
+						? previousSelection.row === currRow &&
+						  previousSelection.col === currCol
 							? "solid blue"
-							: "",
+							: ""
+						: "",
 				}}
 			>
-				{element.constructor.name !== "Box" && (
-					<Image
-						src={`pieces/${
-							(element as Piece).color === 0 ? "black" : "white"
-						}/${element.constructor.name}.svg`}
-						width={100}
-						height={100}
-						alt={element.constructor.name}
-					/>
-				)}
+				<div className="flex justify-center items-center">
+					{element.constructor.name !== "Box" ? (
+						<div
+							style={highlight ? { backgroundColor: "rgba(0,0,0,0.3)" } : {}}
+						>
+							<div
+								className="w-full h-full flex justify-center items-center rounded-3xl z-20"
+								style={{
+									backgroundColor:
+										(currRow + currCol) % 2
+											? "rgb(181, 136, 99)"
+											: "rgb(240, 217, 181)",
+								}}
+							>
+								<Image
+									src={`pieces/${
+										(element as Piece).color === 0 ? "black" : "white"
+									}/${element.constructor.name}.svg`}
+									width={100}
+									height={100}
+									alt={element.constructor.name}
+								/>
+							</div>
+						</div>
+					) : (
+						highlight && (
+							<div className="w-4 h-4 absolute rounded-full bg-black opacity-25"></div>
+						)
+					)}
+				</div>
 			</div>
 		);
 	};
@@ -95,7 +112,7 @@ export default function Home() {
 	return (
 		<div
 			className="flex flex-col sm:p-20 items-center select-none"
-			onClick={unselectBox}
+			onClick={() => setPreviousSelection(null)}
 		>
 			{game.board.map((rowArr, i) => (
 				<div key={i} className="flex justify-center">

@@ -12,7 +12,6 @@ export class Piece extends Box {
 		super(row, col);
 		this.color = color;
 	}
-	getMoves(board: Box[][]) {}
 	move() {}
 }
 class MoveSensitivePiece extends Piece {
