@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { Box, ElementI, Piece, PieceI } from "./lib/Classes";
+import { Box, ElementI, Pawn, Piece, PieceI } from "./lib/Classes";
 import { useState } from "react";
 import startingBoard from "./lib/sampleBoard";
 
@@ -68,6 +68,7 @@ export default function Home() {
 
 					const { row: prevRow, col: prevCol } = SRC;
 
+					if (SRC.constructor.name === "Pawn") (SRC as Pawn).hasMoved = true;
 					SRC.row = currRow;
 					SRC.col = currCol;
 
