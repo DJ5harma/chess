@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { Box, ElementsI, Piece } from "./lib/Classes";
+import { Box, ElementI, Piece, PieceI } from "./lib/Classes";
 import { useState } from "react";
 import startingBoard from "./lib/sampleBoard";
 
@@ -11,40 +11,60 @@ export default function Home() {
 	});
 	const [previousSelection, setPreviousSelection] = useState<Box | null>(null);
 
-	// const [highlightedBoxes, setHighlightedBoxes] = useState<Box[]>([]);
-
-	const isPiece = (box: Box) => box.constructor.name !== "Box";
+	const [highlightedBoxes, setHighlightedBoxes] = useState<Box[]>([]);
 
 	const Block = ({
 		element,
 		currRow,
 		currCol,
 	}: {
-		element: ElementsI;
+		element: ElementI;
 		currRow: number;
 		currCol: number;
 	}) => {
-		const highlight = true;
+		const highlighted =
+			highlightedBoxes.filter(
+				({ row, col }) => row === currRow && col === currCol
+			).length === 1;
 
 		return (
 			<div
 				className="w-16 h-16 flex justify-center items-center"
 				onClick={(e) => {
 					e.stopPropagation();
+
 					const { board, move } = game;
+					const DST = board[currRow][currCol] as PieceI;
+					const SRC = previousSelection as PieceI;
 
-					const DST = board[currRow][currCol] as Piece;
-					const SRC = previousSelection as Piece;
+					const wrongMover = () =>
+						(move % 2 === 1 && SRC.color === 0) ||
+						(move % 2 === 0 && SRC.color === 1);
 
+					if (SRC === DST) {
+						setHighlightedBoxes([]);
+						return setPreviousSelection(null);
+					}
 					if (
 						!SRC ||
-						!isPiece(SRC) ||
+						SRC.constructor.name === "Box" ||
 						SRC.color === DST.color ||
-						(move % 2 === 1 && SRC.color === 0) ||
-						(move % 2 === 0 && SRC.color === 1)
-					)
-						return setPreviousSelection(DST);
-					if (SRC === DST) return setPreviousSelection(null);
+						wrongMover()
+					) {
+						if (DST.constructor.name === "Box") {
+							setHighlightedBoxes([]);
+							setPreviousSelection(DST);
+						} else {
+							setPreviousSelection(DST);
+							setHighlightedBoxes(DST.getMoves(game.board) || []);
+						}
+						return;
+					} // we will return if the prevSelection is inValid or is of the same colored-piece of this selectionn(DST)
+
+					if (!highlighted) {
+						setPreviousSelection(null);
+						return setHighlightedBoxes([]);
+					}
 
 					const { row: prevRow, col: prevCol } = SRC;
 
@@ -60,6 +80,7 @@ export default function Home() {
 
 					setGame({ board: [...board], move: move + 1 });
 					setPreviousSelection(null);
+					setHighlightedBoxes([]);
 				}}
 				style={{
 					backgroundColor:
@@ -78,7 +99,7 @@ export default function Home() {
 				<div className="flex justify-center items-center">
 					{element.constructor.name !== "Box" ? (
 						<div
-							style={highlight ? { backgroundColor: "rgba(0,0,0,0.3)" } : {}}
+							style={highlighted ? { backgroundColor: "rgba(0,0,0,0.3)" } : {}}
 						>
 							<div
 								className="w-full h-full flex justify-center items-center rounded-3xl z-20"
@@ -100,7 +121,7 @@ export default function Home() {
 							</div>
 						</div>
 					) : (
-						highlight && (
+						highlighted && (
 							<div className="w-4 h-4 absolute rounded-full bg-black opacity-25"></div>
 						)
 					)}
@@ -116,7 +137,7 @@ export default function Home() {
 		>
 			{game.board.map((rowArr, i) => (
 				<div key={i} className="flex justify-center">
-					{rowArr.map((element: ElementsI, j) => (
+					{rowArr.map((element: ElementI, j) => (
 						<Block element={element} key={`${i}${j}`} currRow={i} currCol={j} />
 					))}
 				</div>
